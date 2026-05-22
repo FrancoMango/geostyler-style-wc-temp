@@ -61,7 +61,9 @@ styler.data = {
 };
 ```
 
-### Listen for style changes
+### Listeners
+
+#### `style-change`
 
 When the user edits the style, a `style-change` CustomEvent is dispatched on the element:
 
@@ -70,6 +72,10 @@ styler.addEventListener('style-change', (event) => {
   console.log('Updated style:', event.detail);
 });
 ```
+
+#### `parse-error`
+
+<!--- TODO WIP --->
 
 ### Angular example
 

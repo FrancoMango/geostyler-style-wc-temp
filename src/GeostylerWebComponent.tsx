@@ -29,7 +29,18 @@ const GeostylerStyleAdapter: React.FC<{
   useEffect(() => {
     if (!data) return;
 
-    geoJsonParser.readData(data).then((gsData) => setParsedData(gsData)); // TODO: catch
+    geoJsonParser
+      .readData(data)
+      .then((gsData) => setParsedData(gsData))
+      .catch((error) => {
+        container?.dispatchEvent(
+          new CustomEvent('parse-error', {
+            detail: error,
+            bubbles: true,
+            composed: true
+          })
+        );
+      });
   }, [data]);
 
   return (
