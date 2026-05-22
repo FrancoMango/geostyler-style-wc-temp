@@ -23,9 +23,7 @@ const GeostylerStyleAdapter: React.FC<{
   locale?: keyof typeof gsLocale;
 }> = ({ container, data, geostylerStyle, locale }) => {
   const activeLocale =
-    locale && locale in gsLocale
-      ? gsLocale[locale as keyof typeof gsLocale]
-      : gsLocale.en_US;
+    gsLocale[locale as keyof typeof gsLocale] ?? gsLocale.en_US;
 
   const geoJsonParser = useMemo(() => new GeoJsonDataParser(), []);
 
