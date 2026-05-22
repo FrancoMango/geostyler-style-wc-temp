@@ -7,6 +7,15 @@ import { GeoJsonDataParser } from 'geostyler-geojson-parser';
 import { Style as GsStyle } from 'geostyler-style';
 import React, { useEffect, useMemo } from 'react';
 
+function isGsStyle(val: unknown): val is GsStyle {
+  return (
+    typeof val === 'object' &&
+    val !== null &&
+    typeof (val as GsStyle).name === 'string' &&
+    Array.isArray((val as GsStyle).rules)
+  );
+}
+
 const GeostylerStyleAdapter: React.FC<{
   container?: HTMLElement;
   data: GeoJSONFeatureCollection;
@@ -42,6 +51,19 @@ const GeostylerStyleAdapter: React.FC<{
         );
       });
   }, [data]);
+
+  if (!isGsStyle(geostylerStyle)) {
+    if (geostylerStyle != null) {
+      container?.dispatchEvent(
+        new CustomEvent('parse-error', {
+          detail: new Error('geostylerStyle prop has an invalid shape'),
+          bubbles: true,
+          composed: true
+        })
+      );
+    }
+    return null;
+  }
 
   return (
     <GeoStylerContext.Provider
