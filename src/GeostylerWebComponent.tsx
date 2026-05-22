@@ -5,7 +5,7 @@ import { GeoStylerContext, Style, locale as gsLocale } from 'geostyler';
 import { Data } from 'geostyler-data';
 import { GeoJsonDataParser } from 'geostyler-geojson-parser';
 import { Style as GsStyle } from 'geostyler-style';
-import React, { useEffect, useMemo } from 'react';
+import React, { useCallback, useEffect, useMemo } from 'react';
 
 function isGsStyle(val: unknown): val is GsStyle {
   return (
@@ -31,15 +31,18 @@ const GeostylerStyleAdapter: React.FC<{
 
   const [parsedData, setParsedData] = React.useState<Data | null>(null);
 
-  const emitStyleChange = (newStyle: GsStyle) => {
-    container?.dispatchEvent(
-      new CustomEvent('style-change', {
-        detail: newStyle,
-        bubbles: true,
-        composed: true
-      })
-    );
-  };
+  const emitStyleChange = useCallback(
+    (newStyle: GsStyle) => {
+      container?.dispatchEvent(
+        new CustomEvent('style-change', {
+          detail: newStyle,
+          bubbles: true,
+          composed: true
+        })
+      );
+    },
+    [container]
+  );
 
   useEffect(() => {
     if (!data) return;
