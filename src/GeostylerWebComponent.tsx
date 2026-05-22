@@ -1,7 +1,7 @@
 import { GeoJSONFeatureCollection } from 'ol/format/GeoJSON';
 
 import r2wc from '@r2wc/react-to-web-component';
-import { GeoStylerContext, Style, locale } from 'geostyler';
+import { GeoStylerContext, Style, locale as gsLocale } from 'geostyler';
 import { Data } from 'geostyler-data';
 import { GeoJsonDataParser } from 'geostyler-geojson-parser';
 import { Style as GsStyle } from 'geostyler-style';
@@ -20,7 +20,13 @@ const GeostylerStyleAdapter: React.FC<{
   container?: HTMLElement;
   data: GeoJSONFeatureCollection;
   geostylerStyle: GsStyle;
-}> = ({ container, data, geostylerStyle }) => {
+  locale?: keyof typeof gsLocale;
+}> = ({ container, data, geostylerStyle, locale }) => {
+  const activeLocale =
+    locale && locale in gsLocale
+      ? gsLocale[locale as keyof typeof gsLocale]
+      : gsLocale.en_US;
+
   const geoJsonParser = useMemo(() => new GeoJsonDataParser(), []);
 
   const [parsedData, setParsedData] = React.useState<Data | null>(null);
@@ -67,7 +73,7 @@ const GeostylerStyleAdapter: React.FC<{
 
   return (
     <GeoStylerContext.Provider
-      value={{ data: parsedData, locale: locale.fr_FR }}
+      value={{ data: parsedData, locale: activeLocale }}
     >
       <Style style={geostylerStyle} onStyleChange={emitStyleChange} />
     </GeoStylerContext.Provider>
@@ -75,5 +81,5 @@ const GeostylerStyleAdapter: React.FC<{
 };
 
 export const GeostylerWebComponent = r2wc(GeostylerStyleAdapter, {
-  props: { geostylerStyle: 'json', data: 'json' }
+  props: { geostylerStyle: 'json', data: 'json', locale: 'string' }
 });
