@@ -172,6 +172,10 @@
         errorBanner.classList.add('visible');
       });
 
+      styler.addEventListener('warning', (e) => {
+        console.warn('[geostyler-style-wc]', e.detail);
+      });
+
       const data = {
         type: 'FeatureCollection',
         features: [
