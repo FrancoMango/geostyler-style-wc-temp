@@ -117,9 +117,9 @@ export const GeostylerWebComponent = r2wc(GeostylerStyleAdapter, {
     geostylerStyle: 'json',
     data: 'json',
     locale: 'string',
-    composition: 'string',
-    unsupportedProperties: 'string',
-    nameField: 'string',
+    composition: 'json',
+    unsupportedProperties: 'json',
+    nameField: 'json',
     disableClassification: 'boolean',
     disableMultiEdit: 'boolean'
   }
