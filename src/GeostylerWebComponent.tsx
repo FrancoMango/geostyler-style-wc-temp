@@ -1,11 +1,16 @@
 import { GeoJSONFeatureCollection } from 'ol/format/GeoJSON';
 
 import r2wc from '@r2wc/react-to-web-component';
-import { GeoStylerContext, GeoStylerContextInterface, Style, locale as gsLocale } from 'geostyler';
-import { StyleProps } from 'geostyler/dist/Component/Style/Style';
+import {
+  GeoStylerContext,
+  GeoStylerContextInterface,
+  Style,
+  locale as gsLocale
+} from 'geostyler';
 import { Data } from 'geostyler-data';
 import { GeoJsonDataParser } from 'geostyler-geojson-parser';
 import { Style as GsStyle } from 'geostyler-style';
+import { StyleProps } from 'geostyler/dist/Component/Style/Style';
 import React, { useCallback, useEffect, useMemo } from 'react';
 
 function isGsStyle(val: unknown): val is GsStyle {
@@ -47,7 +52,9 @@ const GeostylerStyleAdapter: React.FC<GeostylerStyleAdapterProps> = ({
 
   const geoJsonParser = useMemo(() => new GeoJsonDataParser(), []);
 
-  const [parsedData, setParsedData] = React.useState<Data | undefined>(undefined);
+  const [parsedData, setParsedData] = React.useState<Data | undefined>(
+    undefined
+  );
 
   const emitStyleChange = useCallback(
     (newStyle: GsStyle) => {
