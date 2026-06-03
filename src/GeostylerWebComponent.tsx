@@ -22,6 +22,17 @@ function isGsStyle(val: unknown): val is GsStyle {
   );
 }
 
+function isGeoJsonFeatureCollection(
+  val: unknown
+): val is GeoJSONFeatureCollection {
+  return (
+    typeof val === 'object' &&
+    val !== null &&
+    (val as { type?: unknown }).type === 'FeatureCollection' &&
+    Array.isArray((val as { features?: unknown }).features)
+  );
+}
+
 interface GeostylerStyleAdapterProps {
   container?: HTMLElement;
   // Context props
@@ -52,6 +63,9 @@ const GeostylerStyleAdapter: React.FC<GeostylerStyleAdapterProps> = ({
 
   const geoJsonParser = useMemo(() => new GeoJsonDataParser(), []);
 
+  const [validationError, setValidationError] = React.useState<
+    Error | undefined
+  >();
   const [parsedData, setParsedData] = React.useState<Data | undefined>(
     undefined
   );
@@ -70,7 +84,21 @@ const GeostylerStyleAdapter: React.FC<GeostylerStyleAdapterProps> = ({
   );
 
   useEffect(() => {
-    if (!data) return;
+    if (!data) {
+      setParsedData(undefined);
+      setValidationError(undefined);
+      return;
+    }
+
+    if (!isGeoJsonFeatureCollection(data)) {
+      setParsedData(undefined);
+      setValidationError(
+        new Error('data prop is not a valid GeoJSON FeatureCollection')
+      );
+      return;
+    }
+
+    setValidationError(undefined);
 
     geoJsonParser
       .readData(data)
@@ -84,18 +112,21 @@ const GeostylerStyleAdapter: React.FC<GeostylerStyleAdapterProps> = ({
           })
         );
       });
-  }, [data]);
+  }, [data, geoJsonParser]);
+
+  useEffect(() => {
+    if (!validationError) return;
+
+    container?.dispatchEvent(
+      new CustomEvent('parse-error', {
+        detail: validationError,
+        bubbles: true,
+        composed: true
+      })
+    );
+  }, [container, validationError]);
 
   if (!isGsStyle(geostylerStyle)) {
-    if (geostylerStyle != null) {
-      container?.dispatchEvent(
-        new CustomEvent('parse-error', {
-          detail: new Error('geostylerStyle prop has an invalid shape'),
-          bubbles: true,
-          composed: true
-        })
-      );
-    }
     return null;
   }
 
