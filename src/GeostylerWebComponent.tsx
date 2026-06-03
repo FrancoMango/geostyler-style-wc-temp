@@ -11,7 +11,7 @@ import { Data } from 'geostyler-data';
 import { GeoJsonDataParser } from 'geostyler-geojson-parser';
 import { Style as GsStyle } from 'geostyler-style';
 import { StyleProps } from 'geostyler/dist/Component/Style/Style';
-import React, { useCallback, useEffect, useMemo } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef } from 'react';
 
 function isGsStyle(val: unknown): val is GsStyle {
   return (
@@ -33,18 +33,48 @@ function isGeoJsonFeatureCollection(
   );
 }
 
+function toError(error: unknown, fallbackMessage: string): Error {
+  return error instanceof Error ? error : new Error(fallbackMessage);
+}
+
+function ErrorFallback({ message }: { message: string }) {
+  return (
+    <div
+      role="alert"
+      aria-live="polite"
+      style={{
+        boxSizing: 'border-box',
+        padding: '12px 16px',
+        border: '1px solid #d32f2f',
+        borderRadius: '8px',
+        background: '#fff5f5',
+        color: '#7f1d1d',
+        fontFamily: 'system-ui, sans-serif',
+        fontSize: '14px',
+        lineHeight: 1.4
+      }}
+    >
+      <strong style={{ display: 'block', marginBottom: '4px' }}>
+        GeoStyler editor failed to load
+      </strong>
+      <span>{message}</span>
+    </div>
+  );
+}
+
 interface GeostylerStyleAdapterProps {
   container?: HTMLElement;
   // Context props
-  data: GeoJSONFeatureCollection;
+  data: unknown;
   locale?: keyof typeof gsLocale;
   composition?: GeoStylerContextInterface['composition'];
   unsupportedProperties?: GeoStylerContextInterface['unsupportedProperties'];
   // Style props
-  geostylerStyle: GsStyle;
+  geostylerStyle: unknown;
   nameField?: StyleProps['nameField'];
   disableClassification?: StyleProps['disableClassification'];
   disableMultiEdit?: StyleProps['disableMultiEdit'];
+  debounceMs?: number;
 }
 
 const GeostylerStyleAdapter: React.FC<GeostylerStyleAdapterProps> = ({
@@ -56,62 +86,95 @@ const GeostylerStyleAdapter: React.FC<GeostylerStyleAdapterProps> = ({
   geostylerStyle,
   nameField,
   disableClassification,
-  disableMultiEdit
+  disableMultiEdit,
+  debounceMs = 0
 }) => {
   const activeLocale =
     gsLocale[locale as keyof typeof gsLocale] ?? gsLocale.en_US;
 
   const geoJsonParser = useMemo(() => new GeoJsonDataParser(), []);
 
-  const [validationError, setValidationError] = React.useState<
+  const styleValidationError = useMemo(() => {
+    if (geostylerStyle == null || isGsStyle(geostylerStyle)) {
+      return undefined;
+    }
+
+    return new Error('geostylerStyle prop has an invalid shape');
+  }, [geostylerStyle]);
+
+  const [dataValidationError, setDataValidationError] = React.useState<
     Error | undefined
   >();
   const [parsedData, setParsedData] = React.useState<Data | undefined>(
     undefined
   );
 
+  const validationError = styleValidationError ?? dataValidationError;
+
+  const debounceTimer = useRef<ReturnType<typeof setTimeout> | undefined>(
+    undefined
+  );
+
   const emitStyleChange = useCallback(
     (newStyle: GsStyle) => {
-      container?.dispatchEvent(
-        new CustomEvent('style-change', {
-          detail: newStyle,
-          bubbles: true,
-          composed: true
-        })
-      );
+      const dispatch = () =>
+        container?.dispatchEvent(
+          new CustomEvent('style-change', {
+            detail: newStyle,
+            bubbles: true,
+            composed: true
+          })
+        );
+
+      if (debounceMs <= 0) {
+        dispatch();
+        return;
+      }
+
+      clearTimeout(debounceTimer.current);
+      debounceTimer.current = setTimeout(dispatch, debounceMs);
     },
-    [container]
+    [container, debounceMs]
   );
 
   useEffect(() => {
     if (!data) {
       setParsedData(undefined);
-      setValidationError(undefined);
+      setDataValidationError(undefined);
       return;
     }
 
     if (!isGeoJsonFeatureCollection(data)) {
       setParsedData(undefined);
-      setValidationError(
+      setDataValidationError(
         new Error('data prop is not a valid GeoJSON FeatureCollection')
       );
       return;
     }
 
-    setValidationError(undefined);
+    setDataValidationError(undefined);
+
+    let active = true;
 
     geoJsonParser
       .readData(data)
-      .then((gsData) => setParsedData(gsData))
+      .then((gsData) => {
+        if (active) {
+          setParsedData(gsData);
+        }
+      })
       .catch((error) => {
-        container?.dispatchEvent(
-          new CustomEvent('parse-error', {
-            detail: error,
-            bubbles: true,
-            composed: true
-          })
-        );
+        if (!active) {
+          return;
+        }
+
+        setParsedData(undefined);
+        setDataValidationError(toError(error, 'data prop could not be parsed'));
       });
+
+    return () => {
+      active = false;
+    };
   }, [data, geoJsonParser]);
 
   useEffect(() => {
@@ -126,9 +189,19 @@ const GeostylerStyleAdapter: React.FC<GeostylerStyleAdapterProps> = ({
     );
   }, [container, validationError]);
 
+  if (geostylerStyle == null || validationError) {
+    if (validationError) {
+      return <ErrorFallback message={validationError.message} />;
+    }
+
+    return null;
+  }
+
   if (!isGsStyle(geostylerStyle)) {
     return null;
   }
+
+  const validGeostylerStyle = geostylerStyle;
 
   return (
     <GeoStylerContext.Provider
@@ -140,7 +213,7 @@ const GeostylerStyleAdapter: React.FC<GeostylerStyleAdapterProps> = ({
       }}
     >
       <Style
-        style={geostylerStyle}
+        style={validGeostylerStyle}
         onStyleChange={emitStyleChange}
         nameField={nameField}
         disableClassification={disableClassification}
@@ -159,6 +232,7 @@ export const GeostylerWebComponent = r2wc(GeostylerStyleAdapter, {
     unsupportedProperties: 'json',
     nameField: 'json',
     disableClassification: 'boolean',
-    disableMultiEdit: 'boolean'
+    disableMultiEdit: 'boolean',
+    debounceMs: 'number'
   }
 });
