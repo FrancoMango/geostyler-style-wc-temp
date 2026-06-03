@@ -64,8 +64,10 @@ const GeostylerStyleAdapter: React.FC<GeostylerStyleAdapterProps> = ({
   disableMultiEdit,
   debounceMs = 0
 }) => {
-  const activeLocale =
-    gsLocale[locale as keyof typeof gsLocale] ?? gsLocale.en_US;
+  const localeResolved = locale != null && locale in gsLocale;
+  const activeLocale = localeResolved
+    ? gsLocale[locale as keyof typeof gsLocale]
+    : gsLocale.en_US;
 
   const geoJsonParser = useMemo(() => new GeoJsonDataParser(), []);
 
@@ -167,6 +169,18 @@ const GeostylerStyleAdapter: React.FC<GeostylerStyleAdapterProps> = ({
       })
     );
   }, [container, isParsing]);
+
+  useEffect(() => {
+    if (locale == null || localeResolved) return;
+
+    container?.dispatchEvent(
+      new CustomEvent('warning', {
+        detail: `Locale "${locale}" is not supported. Falling back to "en_US".`,
+        bubbles: true,
+        composed: true
+      })
+    );
+  }, [container, locale, localeResolved]);
 
   useEffect(() => {
     if (!validationError) return;
