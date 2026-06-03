@@ -27,7 +27,7 @@ const GeostylerStyleAdapter: React.FC<{
 
   const geoJsonParser = useMemo(() => new GeoJsonDataParser(), []);
 
-  const [parsedData, setParsedData] = React.useState<Data | null>(null);
+  const [parsedData, setParsedData] = React.useState<Data | undefined>(undefined);
 
   const emitStyleChange = useCallback(
     (newStyle: GsStyle) => {
