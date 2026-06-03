@@ -108,6 +108,7 @@ const GeostylerStyleAdapter: React.FC<GeostylerStyleAdapterProps> = ({
   const [parsedData, setParsedData] = React.useState<Data | undefined>(
     undefined
   );
+  const [isParsing, setIsParsing] = React.useState(false);
 
   const validationError = styleValidationError ?? dataValidationError;
 
@@ -141,6 +142,7 @@ const GeostylerStyleAdapter: React.FC<GeostylerStyleAdapterProps> = ({
     if (!data) {
       setParsedData(undefined);
       setDataValidationError(undefined);
+      setIsParsing(false);
       return;
     }
 
@@ -149,10 +151,12 @@ const GeostylerStyleAdapter: React.FC<GeostylerStyleAdapterProps> = ({
       setDataValidationError(
         new Error('data prop is not a valid GeoJSON FeatureCollection')
       );
+      setIsParsing(false);
       return;
     }
 
     setDataValidationError(undefined);
+    setIsParsing(true);
 
     let active = true;
 
@@ -161,6 +165,7 @@ const GeostylerStyleAdapter: React.FC<GeostylerStyleAdapterProps> = ({
       .then((gsData) => {
         if (active) {
           setParsedData(gsData);
+          setIsParsing(false);
         }
       })
       .catch((error) => {
@@ -170,12 +175,23 @@ const GeostylerStyleAdapter: React.FC<GeostylerStyleAdapterProps> = ({
 
         setParsedData(undefined);
         setDataValidationError(toError(error, 'data prop could not be parsed'));
+        setIsParsing(false);
       });
 
     return () => {
       active = false;
     };
   }, [data, geoJsonParser]);
+
+  useEffect(() => {
+    container?.dispatchEvent(
+      new CustomEvent('parsing', {
+        detail: isParsing,
+        bubbles: true,
+        composed: true
+      })
+    );
+  }, [container, isParsing]);
 
   useEffect(() => {
     if (!validationError) return;
