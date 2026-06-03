@@ -1,5 +1,6 @@
 import react from '@vitejs/plugin-react';
 import { defineConfig } from 'vite';
+import cssInjectedByJs from 'vite-plugin-css-injected-by-js';
 import dts from 'vite-plugin-dts';
 import { nodePolyfills } from 'vite-plugin-node-polyfills';
 
@@ -8,6 +9,7 @@ export default defineConfig({
   plugins: [
     react(),
     nodePolyfills(),
+    cssInjectedByJs(),
     dts({ tsconfigPath: './tsconfig.lib.json' })
   ],
   build: {
