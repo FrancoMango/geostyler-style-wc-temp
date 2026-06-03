@@ -1,7 +1,8 @@
 import { GeoJSONFeatureCollection } from 'ol/format/GeoJSON';
 
 import r2wc from '@r2wc/react-to-web-component';
-import { GeoStylerContext, Style, locale as gsLocale } from 'geostyler';
+import { GeoStylerContext, GeoStylerContextInterface, Style, locale as gsLocale } from 'geostyler';
+import { StyleProps } from 'geostyler/dist/Component/Style/Style';
 import { Data } from 'geostyler-data';
 import { GeoJsonDataParser } from 'geostyler-geojson-parser';
 import { Style as GsStyle } from 'geostyler-style';
@@ -16,12 +17,31 @@ function isGsStyle(val: unknown): val is GsStyle {
   );
 }
 
-const GeostylerStyleAdapter: React.FC<{
+interface GeostylerStyleAdapterProps {
   container?: HTMLElement;
+  // Context props
   data: GeoJSONFeatureCollection;
-  geostylerStyle: GsStyle;
   locale?: keyof typeof gsLocale;
-}> = ({ container, data, geostylerStyle, locale }) => {
+  composition?: GeoStylerContextInterface['composition'];
+  unsupportedProperties?: GeoStylerContextInterface['unsupportedProperties'];
+  // Style props
+  geostylerStyle: GsStyle;
+  nameField?: StyleProps['nameField'];
+  disableClassification?: StyleProps['disableClassification'];
+  disableMultiEdit?: StyleProps['disableMultiEdit'];
+}
+
+const GeostylerStyleAdapter: React.FC<GeostylerStyleAdapterProps> = ({
+  container,
+  data,
+  locale,
+  composition,
+  unsupportedProperties,
+  geostylerStyle,
+  nameField,
+  disableClassification,
+  disableMultiEdit
+}) => {
   const activeLocale =
     gsLocale[locale as keyof typeof gsLocale] ?? gsLocale.en_US;
 
@@ -74,13 +94,33 @@ const GeostylerStyleAdapter: React.FC<{
 
   return (
     <GeoStylerContext.Provider
-      value={{ data: parsedData, locale: activeLocale }}
+      value={{
+        data: parsedData,
+        locale: activeLocale,
+        unsupportedProperties,
+        composition
+      }}
     >
-      <Style style={geostylerStyle} onStyleChange={emitStyleChange} />
+      <Style
+        style={geostylerStyle}
+        onStyleChange={emitStyleChange}
+        nameField={nameField}
+        disableClassification={disableClassification}
+        disableMultiEdit={disableMultiEdit}
+      />
     </GeoStylerContext.Provider>
   );
 };
 
 export const GeostylerWebComponent = r2wc(GeostylerStyleAdapter, {
-  props: { geostylerStyle: 'json', data: 'json', locale: 'string' }
+  props: {
+    geostylerStyle: 'json',
+    data: 'json',
+    locale: 'string',
+    composition: 'string',
+    unsupportedProperties: 'string',
+    nameField: 'string',
+    disableClassification: 'boolean',
+    disableMultiEdit: 'boolean'
+  }
 });
