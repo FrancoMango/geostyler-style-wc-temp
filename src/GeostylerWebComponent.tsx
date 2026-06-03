@@ -37,31 +37,6 @@ function toError(error: unknown, fallbackMessage: string): Error {
   return error instanceof Error ? error : new Error(fallbackMessage);
 }
 
-function ErrorFallback({ message }: { message: string }) {
-  return (
-    <div
-      role="alert"
-      aria-live="polite"
-      style={{
-        boxSizing: 'border-box',
-        padding: '12px 16px',
-        border: '1px solid #d32f2f',
-        borderRadius: '8px',
-        background: '#fff5f5',
-        color: '#7f1d1d',
-        fontFamily: 'system-ui, sans-serif',
-        fontSize: '14px',
-        lineHeight: 1.4
-      }}
-    >
-      <strong style={{ display: 'block', marginBottom: '4px' }}>
-        GeoStyler editor failed to load
-      </strong>
-      <span>{message}</span>
-    </div>
-  );
-}
-
 interface GeostylerStyleAdapterProps {
   container?: HTMLElement;
   // Context props
@@ -206,10 +181,6 @@ const GeostylerStyleAdapter: React.FC<GeostylerStyleAdapterProps> = ({
   }, [container, validationError]);
 
   if (geostylerStyle == null || validationError) {
-    if (validationError) {
-      return <ErrorFallback message={validationError.message} />;
-    }
-
     return null;
   }
 
