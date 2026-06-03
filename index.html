@@ -98,6 +98,26 @@
         height: 100%;
       }
 
+      .error-banner {
+        display: none;
+        align-items: center;
+        gap: 8px;
+        padding: 10px 16px;
+        background: #fff5f5;
+        border: 1px solid #f5c2c2;
+        border-radius: 8px;
+        color: #7f1d1d;
+        font-size: 0.875rem;
+      }
+
+      .error-banner.visible {
+        display: flex;
+      }
+
+      .error-banner strong {
+        flex-shrink: 0;
+      }
+
       @media (max-width: 700px) {
         .app {
           padding: 12px;
@@ -116,6 +136,16 @@
         <p class="subtitle">Minimal page layout for the web component</p>
       </header>
 
+      <div
+        class="error-banner"
+        id="error-banner"
+        role="alert"
+        aria-live="polite"
+      >
+        <strong>Error:</strong>
+        <span id="error-message"></span>
+      </div>
+
       <main class="editor">
         <div class="loading-overlay" id="loading">
           <div class="spinner"></div>
@@ -127,9 +157,19 @@
     <script type="module">
       const styler = document.getElementById('styler');
       const loading = document.getElementById('loading');
+      const errorBanner = document.getElementById('error-banner');
+      const errorMessage = document.getElementById('error-message');
 
       styler.addEventListener('parsing', (e) => {
         loading.classList.toggle('visible', e.detail);
+        if (e.detail) {
+          errorBanner.classList.remove('visible');
+        }
+      });
+
+      styler.addEventListener('parse-error', (e) => {
+        errorMessage.textContent = e.detail?.message ?? String(e.detail);
+        errorBanner.classList.add('visible');
       });
 
       const data = {
