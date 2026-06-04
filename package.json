@@ -1,7 +1,33 @@
 {
   "name": "@geostyler/web-component",
   "version": "0.1.0",
-  "description": "Web component for GeoStyler",
+  "description": "Framework-agnostic Web Component wrapper around the GeoStyler <Style> React component.",
+  "license": "BSD-2-Clause",
+  "author": "GeoStyler contributors",
+  "homepage": "https://github.com/geostyler/geostyler-style-wc#readme",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/geostyler/geostyler-style-wc.git"
+  },
+  "bugs": {
+    "url": "https://github.com/geostyler/geostyler-style-wc/issues"
+  },
+  "keywords": [
+    "geostyler",
+    "web-component",
+    "custom-element",
+    "sld",
+    "cartography",
+    "styling",
+    "openlayers",
+    "angular",
+    "vue",
+    "svelte",
+    "react"
+  ],
+  "sideEffects": [
+    "./dist/geostyler-web-component.js"
+  ],
   "main": "dist/index.js",
   "module": "dist/index.js",
   "type": "module",
