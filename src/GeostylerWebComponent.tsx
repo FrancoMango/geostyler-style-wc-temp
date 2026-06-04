@@ -1,5 +1,3 @@
-import { GeoJSONFeatureCollection } from 'ol/format/GeoJSON';
-
 import r2wc from '@r2wc/react-to-web-component';
 import {
   GeoStylerContext,
@@ -10,8 +8,20 @@ import {
 import { Data } from 'geostyler-data';
 import { GeoJsonDataParser } from 'geostyler-geojson-parser';
 import { Style as GsStyle } from 'geostyler-style';
-import { StyleProps } from 'geostyler/dist/Component/Style/Style';
-import React, { useCallback, useEffect, useMemo, useRef } from 'react';
+import React, {
+  type ComponentProps,
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef
+} from 'react';
+
+type GeoJSONFeatureCollectionLike = {
+  type: 'FeatureCollection';
+  features: unknown[];
+};
+
+type StyleComponentProps = ComponentProps<typeof Style>;
 
 function isGsStyle(val: unknown): val is GsStyle {
   return (
@@ -24,7 +34,7 @@ function isGsStyle(val: unknown): val is GsStyle {
 
 function isGeoJsonFeatureCollection(
   val: unknown
-): val is GeoJSONFeatureCollection {
+): val is GeoJSONFeatureCollectionLike {
   return (
     typeof val === 'object' &&
     val !== null &&
@@ -38,18 +48,19 @@ function toError(error: unknown, fallbackMessage: string): Error {
 }
 
 interface GeostylerStyleAdapterProps {
+  // Adapter props
   container?: HTMLElement;
+  debounceMs?: number;
   // Context props
   data: unknown;
   locale?: keyof typeof gsLocale;
   composition?: GeoStylerContextInterface['composition'];
   unsupportedProperties?: GeoStylerContextInterface['unsupportedProperties'];
   // Style props
-  geostylerStyle: unknown;
-  nameField?: StyleProps['nameField'];
-  disableClassification?: StyleProps['disableClassification'];
-  disableMultiEdit?: StyleProps['disableMultiEdit'];
-  debounceMs?: number;
+  geostylerStyle?: unknown;
+  nameField?: StyleComponentProps['nameField'];
+  disableClassification?: StyleComponentProps['disableClassification'];
+  disableMultiEdit?: StyleComponentProps['disableMultiEdit'];
 }
 
 const GeostylerStyleAdapter: React.FC<GeostylerStyleAdapterProps> = ({
@@ -70,6 +81,19 @@ const GeostylerStyleAdapter: React.FC<GeostylerStyleAdapterProps> = ({
     : gsLocale.en_US;
 
   const geoJsonParser = useMemo(() => new GeoJsonDataParser(), []);
+
+  const dispatchCustomEvent = useCallback(
+    (type: string, detail: unknown) => {
+      container?.dispatchEvent(
+        new CustomEvent(type, {
+          detail,
+          bubbles: true,
+          composed: true
+        })
+      );
+    },
+    [container]
+  );
 
   const styleValidationError = useMemo(() => {
     if (geostylerStyle == null || isGsStyle(geostylerStyle)) {
@@ -95,14 +119,7 @@ const GeostylerStyleAdapter: React.FC<GeostylerStyleAdapterProps> = ({
 
   const emitStyleChange = useCallback(
     (newStyle: GsStyle) => {
-      const dispatch = () =>
-        container?.dispatchEvent(
-          new CustomEvent('style-change', {
-            detail: newStyle,
-            bubbles: true,
-            composed: true
-          })
-        );
+      const dispatch = () => dispatchCustomEvent('style-change', newStyle);
 
       if (debounceMs <= 0) {
         dispatch();
@@ -112,8 +129,14 @@ const GeostylerStyleAdapter: React.FC<GeostylerStyleAdapterProps> = ({
       clearTimeout(debounceTimer.current);
       debounceTimer.current = setTimeout(dispatch, debounceMs);
     },
-    [container, debounceMs]
+    [debounceMs, dispatchCustomEvent]
   );
+
+  useEffect(() => {
+    return () => {
+      clearTimeout(debounceTimer.current);
+    };
+  }, []);
 
   useEffect(() => {
     if (!data) {
@@ -161,38 +184,23 @@ const GeostylerStyleAdapter: React.FC<GeostylerStyleAdapterProps> = ({
   }, [data, geoJsonParser]);
 
   useEffect(() => {
-    container?.dispatchEvent(
-      new CustomEvent('parsing', {
-        detail: isParsing,
-        bubbles: true,
-        composed: true
-      })
-    );
-  }, [container, isParsing]);
+    dispatchCustomEvent('parsing', isParsing);
+  }, [dispatchCustomEvent, isParsing]);
 
   useEffect(() => {
     if (locale == null || localeResolved) return;
 
-    container?.dispatchEvent(
-      new CustomEvent('warning', {
-        detail: `Locale "${locale}" is not supported. Falling back to "en_US".`,
-        bubbles: true,
-        composed: true
-      })
+    dispatchCustomEvent(
+      'warning',
+      `Locale "${locale}" is not supported. Falling back to "en_US".`
     );
-  }, [container, locale, localeResolved]);
+  }, [dispatchCustomEvent, locale, localeResolved]);
 
   useEffect(() => {
     if (!validationError) return;
 
-    container?.dispatchEvent(
-      new CustomEvent('parse-error', {
-        detail: validationError,
-        bubbles: true,
-        composed: true
-      })
-    );
-  }, [container, validationError]);
+    dispatchCustomEvent('parse-error', validationError);
+  }, [dispatchCustomEvent, validationError]);
 
   if (geostylerStyle == null || validationError) {
     return null;
