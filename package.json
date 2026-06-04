@@ -8,7 +8,9 @@
   "scripts": {
     "build": "vite build",
     "dev": "vite build --watch",
-    "watch": "vite build --watch"
+    "watch": "vite build --watch",
+    "typecheck": "tsc -p tsconfig.lib.json --noEmit",
+    "test": "vitest run --config ../vitest.config.ts"
   },
   "types": "dist/index.d.ts",
   "exports": {

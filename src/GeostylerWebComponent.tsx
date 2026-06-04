@@ -63,7 +63,7 @@ interface GeostylerStyleAdapterProps {
   disableMultiEdit?: StyleComponentProps['disableMultiEdit'];
 }
 
-const GeostylerStyleAdapter: React.FC<GeostylerStyleAdapterProps> = ({
+export const GeostylerStyleAdapter: React.FC<GeostylerStyleAdapterProps> = ({
   container,
   data,
   locale,
