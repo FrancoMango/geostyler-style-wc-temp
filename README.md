@@ -13,7 +13,7 @@ Under the hood, it uses [`@r2wc/react-to-web-component`](https://github.com/bito
 - Framework-agnostic — works with Angular, Vue, Svelte, or vanilla HTML/JS
 - Wraps GeoStyler's `<Style>` component with full style editing capabilities
 - Accepts GeoJSON feature data for attribute-based styling
-- Emits a `style-change` custom DOM event when the style is updated
+- Emits namespaced `gs-*` custom DOM events (`gs-style-change`, `gs-parsing`, `gs-parse-error`, `gs-warning`)
 - Ships as an ES module, ready for use with modern bundlers
 
 ## Usage
@@ -34,12 +34,21 @@ import '@geostyler/web-component/geostyler-web-component';
 
 ### Pass data and style via JavaScript
 
-The component accepts two JSON attributes/properties:
+The element exposes the following properties. Object-valued properties must be
+set as JavaScript properties (or JSON-encoded attributes); they cannot be passed
+as plain string attributes.
 
-| Property          | Type                      | Description                                      |
-|-------------------|---------------------------|--------------------------------------------------|
-| `geostylerStyle`  | `GeoStyler Style` (JSON)  | The initial cartographic style to display/edit.  |
-| `data`            | `GeoJSONFeatureCollection`| GeoJSON data used for attribute-based symbolizers.|
+| Property                 | Attribute                  | Type                                | Description                                                                 |
+|--------------------------|----------------------------|-------------------------------------|-----------------------------------------------------------------------------|
+| `geostylerStyle`         | `geostyler-style`          | `GeoStyler Style` (JSON)            | The cartographic style to display and edit.                                 |
+| `data`                   | `data`                     | `GeoJSON FeatureCollection` (JSON)  | GeoJSON data used for attribute-based symbolizers and classification.       |
+| `locale`                 | `locale`                   | `string`                            | GeoStyler locale key (e.g. `en_US`, `fr_FR`). Falls back to `en_US`.        |
+| `composition`            | `composition`              | `GeoStyler composition` (JSON)      | GeoStyler context composition overrides.                                    |
+| `unsupportedProperties`  | `unsupported-properties`   | `object` (JSON)                     | GeoStyler unsupported-properties configuration.                             |
+| `nameField`              | `name-field`               | `{ visibility?: boolean }` (JSON)   | Controls the style name field, e.g. `{ "visibility": false }`.              |
+| `disableClassification`  | `disable-classification`   | `boolean`                           | Disables the classification UI.                                             |
+| `disableMultiEdit`       | `disable-multi-edit`       | `boolean`                           | Disables multi-rule editing.                                                |
+| `debounceMs`             | `debounce-ms`              | `number`                            | Debounce delay (ms) for the `gs-style-change` event. Defaults to `0`.       |
 
 ```js
 const styler = document.getElementById('styler');
@@ -61,21 +70,35 @@ styler.data = {
 };
 ```
 
-### Listeners
+### Events
 
-#### `style-change`
+All events are dispatched on the element, `bubbles: true` and `composed: true`,
+and are namespaced with a `gs-` prefix to avoid collisions.
 
-When the user edits the style, a `style-change` CustomEvent is dispatched on the element:
+| Event             | `detail` type        | Description                                                                 |
+|-------------------|----------------------|-----------------------------------------------------------------------------|
+| `gs-style-change` | `GeoStyler Style`    | The user edited the style. Debounced by `debounceMs`.                       |
+| `gs-parsing`      | `boolean`            | `true` while GeoJSON `data` is being parsed, `false` when finished.         |
+| `gs-parse-error`  | `Error`              | The `geostylerStyle` shape is invalid, or `data` could not be parsed.       |
+| `gs-warning`      | `string`             | Non-fatal warning, e.g. an unsupported `locale` falling back to `en_US`.    |
 
 ```js
-styler.addEventListener('style-change', (event) => {
+styler.addEventListener('gs-style-change', (event) => {
   console.log('Updated style:', event.detail);
 });
+
+styler.addEventListener('gs-parsing', (event) => {
+  console.log('Parsing:', event.detail);
+});
+
+styler.addEventListener('gs-parse-error', (event) => {
+  console.error('Parse error:', event.detail.message);
+});
+
+styler.addEventListener('gs-warning', (event) => {
+  console.warn('Warning:', event.detail);
+});
 ```
-
-#### `parse-error`
-
-<!--- TODO WIP --->
 
 ### Angular example
 
@@ -88,7 +111,7 @@ import '@geostyler/web-component/geostyler-web-component';
 <!-- app.component.html -->
 <geostyler-style-wc
   #styler
-  (style-change)="onStyleChange($event)">
+  (gs-style-change)="onStyleChange($event)">
 </geostyler-style-wc>
 ```
 
@@ -100,6 +123,22 @@ onStyleChange(event: CustomEvent) {
 ```
 
 > In Angular, add `CUSTOM_ELEMENTS_SCHEMA` to the module/component schemas to suppress unknown-element warnings.
+
+#### Server-side rendering (Angular Universal)
+
+This package is a browser-only artifact (it defines a custom element and mounts
+React in the DOM). Registration is a no-op when `customElements` is unavailable,
+so importing it on the server is safe, but the element should only be used in a
+browser context. Import or register it behind a browser guard:
+
+```ts
+import { isPlatformBrowser } from '@angular/common';
+import { PLATFORM_ID, inject } from '@angular/core';
+
+if (isPlatformBrowser(inject(PLATFORM_ID))) {
+  await import('@geostyler/web-component/geostyler-web-component');
+}
+```
 
 ## Building
 
@@ -129,6 +168,15 @@ GeostylerStyleAdapter  ← React wrapper component (internal)
 ```
 
 1. `geostyler-web-component.ts` registers `<geostyler-style-wc>` via `customElements.define`.
-2. `GeostylerWebComponent.tsx` uses `@r2wc/react-to-web-component` to mount the React `<Style>` component inside a Shadow DOM-compatible custom element.
+2. `GeostylerWebComponent.tsx` uses `@r2wc/react-to-web-component` to mount the React `<Style>` component inside a custom element.
 3. GeoJSON data is parsed with `geostyler-geojson-parser` and provided to GeoStyler via `GeoStylerContext`.
-4. Style changes bubble up as a standard `style-change` DOM event.
+4. Style changes bubble up as a `gs-style-change` DOM event.
+
+### Bundle size & multiple instances
+
+Because `@r2wc/react-to-web-component` packs React into the component, the
+bundle includes React, GeoStyler and its UI dependencies. This makes the
+component a true drop-in for non-React frameworks, at the cost of bundle size.
+Using several GeoStyler web components in one application may load more than one
+React runtime. Sharing a single React instance across instances is tracked as
+future work (see [discussion #2758](https://github.com/orgs/geostyler/discussions/2758)).
