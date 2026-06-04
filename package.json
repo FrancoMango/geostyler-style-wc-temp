@@ -36,7 +36,7 @@
     "dev": "vite build --watch",
     "watch": "vite build --watch",
     "typecheck": "tsc -p tsconfig.lib.json --noEmit",
-    "test": "vitest run --config ../vitest.config.ts"
+    "test": "vitest run"
   },
   "types": "dist/index.d.ts",
   "exports": {
