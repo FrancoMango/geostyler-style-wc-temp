@@ -4,26 +4,17 @@
   "description": "Framework-agnostic Web Component wrapper around the GeoStyler <Style> React component.",
   "license": "BSD-2-Clause",
   "author": "GeoStyler contributors",
-  "homepage": "https://github.com/geostyler/geostyler-style-wc#readme",
+  "homepage": "TODO",
   "repository": {
     "type": "git",
-    "url": "https://github.com/geostyler/geostyler-style-wc.git"
+    "url": "TODO"
   },
   "bugs": {
-    "url": "https://github.com/geostyler/geostyler-style-wc/issues"
+    "url": "TODO"
   },
   "keywords": [
     "geostyler",
-    "web-component",
-    "custom-element",
-    "sld",
-    "cartography",
-    "styling",
-    "openlayers",
-    "angular",
-    "vue",
-    "svelte",
-    "react"
+    "web-component"
   ],
   "sideEffects": [
     "./dist/geostyler-web-component.js"
@@ -34,7 +25,6 @@
   "scripts": {
     "build": "vite build",
     "dev": "vite build --watch",
-    "watch": "vite build --watch",
     "typecheck": "tsc -p tsconfig.lib.json --noEmit",
     "test": "vitest run"
   },
