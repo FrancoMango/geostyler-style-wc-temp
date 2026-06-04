@@ -119,7 +119,7 @@ export const GeostylerStyleAdapter: React.FC<GeostylerStyleAdapterProps> = ({
 
   const emitStyleChange = useCallback(
     (newStyle: GsStyle) => {
-      const dispatch = () => dispatchCustomEvent('style-change', newStyle);
+      const dispatch = () => dispatchCustomEvent('gs-style-change', newStyle);
 
       if (debounceMs <= 0) {
         dispatch();
@@ -184,14 +184,14 @@ export const GeostylerStyleAdapter: React.FC<GeostylerStyleAdapterProps> = ({
   }, [data, geoJsonParser]);
 
   useEffect(() => {
-    dispatchCustomEvent('parsing', isParsing);
+    dispatchCustomEvent('gs-parsing', isParsing);
   }, [dispatchCustomEvent, isParsing]);
 
   useEffect(() => {
     if (locale == null || localeResolved) return;
 
     dispatchCustomEvent(
-      'warning',
+      'gs-warning',
       `Locale "${locale}" is not supported. Falling back to "en_US".`
     );
   }, [dispatchCustomEvent, locale, localeResolved]);
@@ -199,7 +199,7 @@ export const GeostylerStyleAdapter: React.FC<GeostylerStyleAdapterProps> = ({
   useEffect(() => {
     if (!validationError) return;
 
-    dispatchCustomEvent('parse-error', validationError);
+    dispatchCustomEvent('gs-parse-error', validationError);
   }, [dispatchCustomEvent, validationError]);
 
   if (geostylerStyle == null || validationError) {

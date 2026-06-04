@@ -160,19 +160,19 @@
       const errorBanner = document.getElementById('error-banner');
       const errorMessage = document.getElementById('error-message');
 
-      styler.addEventListener('parsing', (e) => {
+      styler.addEventListener('gs-parsing', (e) => {
         loading.classList.toggle('visible', e.detail);
         if (e.detail) {
           errorBanner.classList.remove('visible');
         }
       });
 
-      styler.addEventListener('parse-error', (e) => {
+      styler.addEventListener('gs-parse-error', (e) => {
         errorMessage.textContent = e.detail?.message ?? String(e.detail);
         errorBanner.classList.add('visible');
       });
 
-      styler.addEventListener('warning', (e) => {
+      styler.addEventListener('gs-warning', (e) => {
         console.warn('[geostyler-style-wc]', e.detail);
       });
 
