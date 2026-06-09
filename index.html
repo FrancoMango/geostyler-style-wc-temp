@@ -4,7 +4,9 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>GeoStyler Web Component</title>
+    <link rel="stylesheet" href="https://unpkg.com/ol@10.6.1/ol.css" />
     <script type="module" src="./dist/geostyler-web-component.js"></script>
+    <script src="https://unpkg.com/ol@10.6.1/dist/ol.js"></script>
     <style>
       :root {
         --bg: #f5f7f6;
@@ -55,11 +57,30 @@
 
       .editor {
         position: relative;
-        height: 70vh;
+        height: 100%;
         background: var(--panel);
         border: 1px solid var(--line);
         border-radius: 10px;
         overflow: hidden;
+      }
+
+      .workspace {
+        display: grid;
+        grid-template-rows: 1fr 1fr;
+        gap: 12px;
+        height: 78vh;
+      }
+
+      .map-panel {
+        background: var(--panel);
+        border: 1px solid var(--line);
+        border-radius: 10px;
+        overflow: hidden;
+      }
+
+      #map {
+        width: 100%;
+        height: 100%;
       }
 
       .loading-overlay {
@@ -123,8 +144,9 @@
           padding: 12px;
         }
 
-        .editor {
-          height: 78vh;
+        .workspace {
+          grid-template-rows: 1fr 1fr;
+          height: 82vh;
         }
       }
     </style>
@@ -146,19 +168,90 @@
         <span id="error-message"></span>
       </div>
 
-      <main class="editor">
-        <div class="loading-overlay" id="loading">
-          <div class="spinner"></div>
-        </div>
-        <geostyler-style-wc id="styler" debounce-ms="300"></geostyler-style-wc>
+      <main class="workspace">
+        <section class="editor">
+          <div class="loading-overlay" id="loading">
+            <div class="spinner"></div>
+          </div>
+          <geostyler-style-wc
+            id="styler"
+            debounce-ms="300"
+          ></geostyler-style-wc>
+        </section>
+
+        <section class="map-panel" aria-label="OpenLayers map preview">
+          <div id="map"></div>
+        </section>
       </main>
     </div>
 
     <script type="module">
+      import OlStyleParser from 'https://esm.sh/geostyler-openlayers-parser@5.7.0';
+
       const styler = document.getElementById('styler');
       const loading = document.getElementById('loading');
       const errorBanner = document.getElementById('error-banner');
       const errorMessage = document.getElementById('error-message');
+
+      const data = {
+        type: 'FeatureCollection',
+        features: [
+          {
+            type: 'Feature',
+            geometry: { type: 'Point', coordinates: [-71.252712, 46.793560] },
+            properties: { name: 'Québec' }
+          },
+                    {
+            type: 'Feature',
+            geometry: { type: 'Point', coordinates: [-71.185421, 46.765817] },
+            properties: { name: 'Lévis' }
+          }
+        ]
+      };
+
+      const vectorLayer = new ol.layer.Vector({
+        source: new ol.source.Vector({
+        features: new ol.format.GeoJSON().readFeatures(data, {
+              dataProjection: 'EPSG:4326',
+              featureProjection: 'EPSG:3857'
+            }),
+          })
+      });
+
+
+
+      const map = new ol.Map({
+        target: 'map',
+        layers: [
+          new ol.layer.Tile({
+            source: new ol.source.OSM()
+          }),
+          vectorLayer
+        ],
+        view: new ol.View({
+          center: ol.proj.fromLonLat([-71.196064, 46.808366]),
+          zoom: 10
+        })
+      });
+
+      const styleParser = new OlStyleParser(ol);
+
+      async function applyGeoStylerStyle(style) {
+        try {
+          const result = await styleParser.writeStyle(style);
+          if (result.errors?.length) {
+            throw result.errors[0];
+          }
+          vectorLayer.setStyle(result.output);
+        } catch (err) {
+          errorMessage.textContent = err?.message ?? String(err);
+          errorBanner.classList.add('visible');
+        }
+      }
+
+      styler.addEventListener('gs-style-change', (event) => {
+        applyGeoStylerStyle(event.detail);
+      });
 
       styler.addEventListener('gs-parsing', (e) => {
         loading.classList.toggle('visible', e.detail);
@@ -176,16 +269,6 @@
         console.warn('[geostyler-style-wc]', e.detail);
       });
 
-      const data = {
-        type: 'FeatureCollection',
-        features: [
-          {
-            type: 'Feature',
-            geometry: { type: 'Point', coordinates: [2.35, 48.85] },
-            properties: { name: 'Paris' }
-          }
-        ]
-      };
 
       const geostylerStyle = {
         name: 'minimal-style',
@@ -195,7 +278,7 @@
             symbolizers: [
               {
                 kind: 'Mark',
-                wellKnownName: 'Circle',
+                wellKnownName: 'circle',
                 radius: 8,
                 color: '#2f7f77',
                 fillOpacity: 0.85,
@@ -211,6 +294,7 @@
         if (!styler) return;
         styler.data = data;
         styler.geostylerStyle = geostylerStyle;
+        applyGeoStylerStyle(geostylerStyle);
       });
     </script>
   </body>
