@@ -3,6 +3,12 @@ import { createRoot } from 'react-dom/client';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { GeostylerStyleAdapter } from './GeostylerWebComponent';
+import {
+  GS_PARSE_ERROR,
+  GS_PARSING,
+  GS_STYLE_CHANGE,
+  GS_WARNING
+} from './constants';
 
 const mockReadData = vi.fn();
 const mockedStyleFromEditor = { name: 'updated-style', rules: [] };
@@ -76,7 +82,7 @@ describe('GeostylerStyleAdapter', () => {
   it('emits parse-error when geostylerStyle has invalid shape', async () => {
     const container = document.createElement('div');
     const parseErrorHandler = vi.fn();
-    container.addEventListener('gs-parse-error', parseErrorHandler);
+    container.addEventListener(GS_PARSE_ERROR, parseErrorHandler);
 
     await act(async () => {
       root.render(
@@ -99,7 +105,7 @@ describe('GeostylerStyleAdapter', () => {
   it('emits warning when locale is unsupported', async () => {
     const container = document.createElement('div');
     const warningHandler = vi.fn();
-    container.addEventListener('gs-warning', warningHandler);
+    container.addEventListener(GS_WARNING, warningHandler);
 
     await act(async () => {
       root.render(
@@ -120,7 +126,7 @@ describe('GeostylerStyleAdapter', () => {
   it('emits parsing true/false around GeoJSON parsing', async () => {
     const container = document.createElement('div');
     const parsingStates: boolean[] = [];
-    container.addEventListener('gs-parsing', (event) => {
+    container.addEventListener(GS_PARSING, (event) => {
       parsingStates.push((event as CustomEvent<boolean>).detail);
     });
 
@@ -148,7 +154,7 @@ describe('GeostylerStyleAdapter', () => {
   it('cancels pending debounced style-change on unmount', async () => {
     const container = document.createElement('div');
     const styleChangeHandler = vi.fn();
-    container.addEventListener('gs-style-change', styleChangeHandler);
+    container.addEventListener(GS_STYLE_CHANGE, styleChangeHandler);
 
     await act(async () => {
       root.render(
@@ -172,7 +178,7 @@ describe('GeostylerStyleAdapter', () => {
   it('emits gs-style-change immediately when not debounced', async () => {
     const container = document.createElement('div');
     const styleChangeHandler = vi.fn();
-    container.addEventListener('gs-style-change', styleChangeHandler);
+    container.addEventListener(GS_STYLE_CHANGE, styleChangeHandler);
 
     await act(async () => {
       root.render(
@@ -192,7 +198,7 @@ describe('GeostylerStyleAdapter', () => {
   it('emits gs-style-change once after the debounce delay elapses', async () => {
     const container = document.createElement('div');
     const styleChangeHandler = vi.fn();
-    container.addEventListener('gs-style-change', styleChangeHandler);
+    container.addEventListener(GS_STYLE_CHANGE, styleChangeHandler);
 
     await act(async () => {
       root.render(
@@ -222,7 +228,7 @@ describe('GeostylerStyleAdapter', () => {
 
     const container = document.createElement('div');
     const parseErrorHandler = vi.fn();
-    container.addEventListener('gs-parse-error', parseErrorHandler);
+    container.addEventListener(GS_PARSE_ERROR, parseErrorHandler);
 
     const data = {
       type: 'FeatureCollection' as const,
@@ -251,8 +257,8 @@ describe('GeostylerStyleAdapter', () => {
     const container = document.createElement('div');
     const parseErrorHandler = vi.fn();
     const parsingStates: boolean[] = [];
-    container.addEventListener('gs-parse-error', parseErrorHandler);
-    container.addEventListener('gs-parsing', (event) => {
+    container.addEventListener(GS_PARSE_ERROR, parseErrorHandler);
+    container.addEventListener(GS_PARSING, (event) => {
       parsingStates.push((event as CustomEvent<boolean>).detail);
     });
 

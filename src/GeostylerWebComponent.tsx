@@ -16,6 +16,13 @@ import React, {
   useRef
 } from 'react';
 
+import {
+  GS_PARSE_ERROR,
+  GS_PARSING,
+  GS_STYLE_CHANGE,
+  GS_WARNING
+} from './constants';
+
 type GeoJSONFeatureCollectionLike = {
   type: 'FeatureCollection';
   features: unknown[];
@@ -119,7 +126,7 @@ export const GeostylerStyleAdapter: React.FC<GeostylerStyleAdapterProps> = ({
 
   const emitStyleChange = useCallback(
     (newStyle: GsStyle) => {
-      const dispatch = () => dispatchCustomEvent('gs-style-change', newStyle);
+      const dispatch = () => dispatchCustomEvent(GS_STYLE_CHANGE, newStyle);
 
       if (debounceMs <= 0) {
         dispatch();
@@ -184,14 +191,14 @@ export const GeostylerStyleAdapter: React.FC<GeostylerStyleAdapterProps> = ({
   }, [data, geoJsonParser]);
 
   useEffect(() => {
-    dispatchCustomEvent('gs-parsing', isParsing);
+    dispatchCustomEvent(GS_PARSING, isParsing);
   }, [dispatchCustomEvent, isParsing]);
 
   useEffect(() => {
     if (locale == null || localeResolved) return;
 
     dispatchCustomEvent(
-      'gs-warning',
+      GS_WARNING,
       `Locale "${locale}" is not supported. Falling back to "en_US".`
     );
   }, [dispatchCustomEvent, locale, localeResolved]);
@@ -199,7 +206,7 @@ export const GeostylerStyleAdapter: React.FC<GeostylerStyleAdapterProps> = ({
   useEffect(() => {
     if (!validationError) return;
 
-    dispatchCustomEvent('gs-parse-error', validationError);
+    dispatchCustomEvent(GS_PARSE_ERROR, validationError);
   }, [dispatchCustomEvent, validationError]);
 
   if (geostylerStyle == null || validationError) {
