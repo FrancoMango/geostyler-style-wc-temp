@@ -1,4 +1,4 @@
-# @geostyler/web-component
+# geostyler-web-components
 
 A technology-agnostic Web Component wrapper around the [GeoStyler](https://geostyler.org/) `<Style>` React component.
 
@@ -23,7 +23,7 @@ Under the hood, it uses [`@r2wc/react-to-web-component`](https://github.com/bito
 Import the registration module once in your application entry point:
 
 ```js
-import '@geostyler/web-component/geostyler-web-component';
+import 'geostyler-web-components/geostyler-web-component';
 ```
 
 ### Use the element in your template
@@ -104,7 +104,7 @@ styler.addEventListener('gs-warning', (event) => {
 
 ```ts
 // app.component.ts
-import '@geostyler/web-component/geostyler-web-component';
+import 'geostyler-web-components/geostyler-web-component';
 ```
 
 ```html
@@ -136,7 +136,7 @@ import { isPlatformBrowser } from '@angular/common';
 import { PLATFORM_ID, inject } from '@angular/core';
 
 if (isPlatformBrowser(inject(PLATFORM_ID))) {
-  await import('@geostyler/web-component/geostyler-web-component');
+  await import('geostyler-web-components/geostyler-web-component');
 }
 ```
 

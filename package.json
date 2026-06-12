@@ -1,5 +1,5 @@
 {
-  "name": "@geostyler/web-component",
+  "name": "geostyler-web-components",
   "version": "0.1.0",
   "description": "Framework-agnostic Web Component wrapper around the GeoStyler <Style> React component.",
   "license": "BSD-2-Clause",
