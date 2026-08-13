@@ -7,7 +7,7 @@
     <link rel="stylesheet" href="https://unpkg.com/ol@10.6.1/ol.css" />
     <script type="module">
       const errorBanner = document.getElementById("error-banner");
-      
+
       async function loadModule(moduleUrl) {
         try {
           const module = await import(moduleUrl);
@@ -31,8 +31,6 @@
       }
 
       function displayMessage(message) {
-        const output = document.getElementById("main");
-        errorBanner.classList.add("visible");
         if (errorBanner) {
           errorBanner.classList.add("visible");
           errorBanner.innerHTML += `
@@ -61,7 +59,7 @@
 
       body {
         margin: 0;
-        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
         background: radial-gradient(
           circle at top right,
           #eaf0ee,
@@ -225,52 +223,50 @@
     </div>
 
     <script type="module">
-      import OlStyleParser from 'https://esm.sh/geostyler-openlayers-parser@5.7.0';
+      import OlStyleParser from "https://esm.sh/geostyler-openlayers-parser@5.7.0";
 
-      const styler = document.getElementById('styler');
-      const loading = document.getElementById('loading');
-      const errorBanner = document.getElementById('error-banner');
-      const errorMessage = document.getElementById('error-message');
+      const styler = document.getElementById("styler");
+      const loading = document.getElementById("loading");
+      const errorBanner = document.getElementById("error-banner");
+      const errorMessage = document.getElementById("error-message");
 
       const data = {
-        type: 'FeatureCollection',
+        type: "FeatureCollection",
         features: [
           {
-            type: 'Feature',
-            geometry: { type: 'Point', coordinates: [-71.252712, 46.793560] },
-            properties: { name: 'Québec' }
+            type: "Feature",
+            geometry: { type: "Point", coordinates: [-71.252712, 46.79356] },
+            properties: { name: "Québec" },
           },
-                    {
-            type: 'Feature',
-            geometry: { type: 'Point', coordinates: [-71.185421, 46.765817] },
-            properties: { name: 'Lévis' }
-          }
-        ]
+          {
+            type: "Feature",
+            geometry: { type: "Point", coordinates: [-71.185421, 46.765817] },
+            properties: { name: "Lévis" },
+          },
+        ],
       };
 
       const vectorLayer = new ol.layer.Vector({
         source: new ol.source.Vector({
-        features: new ol.format.GeoJSON().readFeatures(data, {
-              dataProjection: 'EPSG:4326',
-              featureProjection: 'EPSG:3857'
-            }),
-          })
+          features: new ol.format.GeoJSON().readFeatures(data, {
+            dataProjection: "EPSG:4326",
+            featureProjection: "EPSG:3857",
+          }),
+        }),
       });
 
-
-
       const map = new ol.Map({
-        target: 'map',
+        target: "map",
         layers: [
           new ol.layer.Tile({
-            source: new ol.source.OSM()
+            source: new ol.source.OSM(),
           }),
-          vectorLayer
+          vectorLayer,
         ],
         view: new ol.View({
           center: ol.proj.fromLonLat([-71.196064, 46.808366]),
-          zoom: 10
-        })
+          zoom: 10,
+        }),
       });
 
       const styleParser = new OlStyleParser(ol);
@@ -284,52 +280,50 @@
           vectorLayer.setStyle(result.output);
         } catch (err) {
           errorMessage.textContent = err?.message ?? String(err);
-          errorBanner.classList.add('visible');
+          errorBanner.classList.add("visible");
         }
       }
 
-      styler.addEventListener('gs-style-change', (event) => {
+      styler.addEventListener("gs-style-change", (event) => {
         applyGeoStylerStyle(event.detail);
       });
 
-      styler.addEventListener('gs-parsing', (e) => {
-        loading.classList.toggle('visible', e.detail);
+      styler.addEventListener("gs-parsing", (e) => {
+        loading.classList.toggle("visible", e.detail);
         if (e.detail) {
-          errorBanner.classList.remove('visible');
+          errorBanner.classList.remove("visible");
         }
       });
 
-      styler.addEventListener('gs-parse-error', (e) => {
+      styler.addEventListener("gs-parse-error", (e) => {
         errorMessage.textContent = e.detail?.message ?? String(e.detail);
-        errorBanner.classList.add('visible');
+        errorBanner.classList.add("visible");
       });
 
-      styler.addEventListener('gs-warning', (e) => {
-        console.warn('[geostyler-style-wc]', e.detail);
+      styler.addEventListener("gs-warning", (e) => {
+        console.warn("[geostyler-style-wc]", e.detail);
       });
-
 
       const geostylerStyle = {
-        name: 'minimal-style',
+        name: "minimal-style",
         rules: [
           {
-            name: 'point-rule',
+            name: "point-rule",
             symbolizers: [
               {
-                kind: 'Mark',
-                wellKnownName: 'circle',
+                kind: "Mark",
+                wellKnownName: "circle",
                 radius: 8,
-                color: '#2f7f77',
+                color: "#2f7f77",
                 fillOpacity: 0.85,
-                strokeColor: '#0e2f2b',
-                strokeWidth: 1
-              }
-            ]
-          }
-        ]
+                strokeColor: "#0e2f2b",
+                strokeWidth: 1,
+              },
+            ],
+          },
+        ],
       };
-
-      customElements.whenDefined('geostyler-style-wc').then(() => {
+      customElements.whenDefined("geostyler-style-wc").then(() => {
         if (!styler) return;
         styler.data = data;
         styler.geostylerStyle = geostylerStyle;
