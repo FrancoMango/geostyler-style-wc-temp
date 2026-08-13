@@ -5,7 +5,46 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>GeoStyler Web Component</title>
     <link rel="stylesheet" href="https://unpkg.com/ol@10.6.1/ol.css" />
-    <script type="module" src="./dist/geostyler-web-component.js"></script>
+    <script type="module">
+      const errorBanner = document.getElementById("error-banner");
+      
+      async function loadModule(moduleUrl) {
+        try {
+          const module = await import(moduleUrl);
+
+          const exports = Object.keys(module);
+
+          const hasExports = exports.length > 0;
+
+          if (!hasExports) {
+            console.warn(`Module ${moduleUrl} has no exports`);
+            displayMessage(
+              `Module ${moduleUrl} was loaded but has no exports.`,
+            );
+          }
+        } catch (error) {
+          console.error(`Error loading module ${moduleUrl}:`, error);
+          displayMessage(
+            `Failed to load the script ${moduleUrl}. Please check the console for more details.`,
+          );
+        }
+      }
+
+      function displayMessage(message) {
+        const output = document.getElementById("main");
+        errorBanner.classList.add("visible");
+        if (errorBanner) {
+          errorBanner.classList.add("visible");
+          errorBanner.innerHTML += `
+          <p style="color: red; font-weight: bold;">${message}</p>
+          <p>\u26A0 Have you run "<code>npm run build</code>" first?</p>
+          `;
+        } else {
+          console.warn("Error banner element not found. Message:", message);
+        }
+      }
+      loadModule("./dist/geostyler-web-component.js");
+    </script>
     <script src="https://unpkg.com/ol@10.6.1/dist/ol.js"></script>
     <style>
       :root {
