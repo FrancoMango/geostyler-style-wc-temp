@@ -14,6 +14,7 @@ Under the hood, it uses [`@r2wc/react-to-web-component`](https://github.com/bito
 - Wraps GeoStyler's `<Style>` component with full style editing capabilities
 - Accepts GeoJSON feature data for attribute-based styling
 - Emits namespaced `gs-*` custom DOM events (`gs-style-change`, `gs-parsing`, `gs-parse-error`, `gs-warning`)
+- Bundles and injects GeoStyler's CSS automatically; consumers do not need to import it separately
 - Ships as an ES module, ready for use with modern bundlers
 
 ## Usage
@@ -25,6 +26,9 @@ Import the registration module once in your application entry point:
 ```js
 import 'geostyler-web-components/geostyler-web-component';
 ```
+
+This module also injects the bundled GeoStyler stylesheet automatically; no
+separate `geostyler/dist/index.css` import is needed in the consuming app.
 
 ### Use the element in your template
 

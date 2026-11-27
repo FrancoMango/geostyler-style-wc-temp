@@ -9,7 +9,11 @@ export default defineConfig({
   plugins: [
     react(),
     nodePolyfills(),
-    cssInjectedByJs(),
+    cssInjectedByJs({
+      jsAssetsFilterFunction: (chunk) =>
+        chunk.fileName === 'index.js' ||
+        chunk.fileName === 'geostyler-web-component.js',
+    }),
     dts({ tsconfigPath: "./tsconfig.lib.json" }),
   ],
   build: {

@@ -17,6 +17,7 @@
     "web-component"
   ],
   "sideEffects": [
+    "./dist/index.js",
     "./dist/geostyler-web-component.js"
   ],
   "main": "dist/index.js",
